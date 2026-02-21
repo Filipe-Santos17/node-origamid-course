@@ -1,0 +1,7 @@
+import RouteError from "../route-error.ts";
+
+export default class NotAuthorizedError extends RouteError {
+    constructor(message: string) {
+        super(401, message);
+    }
+}

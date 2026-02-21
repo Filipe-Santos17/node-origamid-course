@@ -1,0 +1,45 @@
+@baseUrl = http://localhost:8000
+
+# @name test_insert_product_exercicio_1
+POST {{baseUrl}}/produtos
+Content-Type: application/json
+
+{
+    "nome":"computador",
+    "slug":"produ",
+    "categoria":"elet",
+    "preco":500
+}
+
+
+##### - Exercicio 3 e 4
+
+# @name post_lms_course
+POST  {{baseUrl}}/lms/courses
+Content-Type: application/json
+
+{
+    "slug": "html-e-css",
+    "title": "HTML e CSS",
+    "description": "Curso de HTML e CSS para Iniciantes",
+    "lessons": 40,
+    "hours": 10
+}
+
+###
+
+# @name post_lms_lesson
+POST  {{baseUrl}}/lms/lessons
+Content-Type: application/json
+
+{
+    "courseSlug": "html-e-css",
+    "slug": "tags-basicas",
+    "title": "Tags Básicas",
+    "seconds": 200,
+    "video": "/html/tags-basicas.mp4",
+    "description": "Aula sobre as Tags Básicas",
+    "order": 1,
+    "free": 1
+},
+ 
