@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import type { tUserRole } from "../../api/auth/querys";
 
 export interface iCustomRequest extends IncomingMessage {
     query: URLSearchParams;
@@ -8,6 +9,11 @@ export interface iCustomRequest extends IncomingMessage {
     params: Record<string, any>;
     ip: string;
     cookies: Record<string, string | undefined>;
+    session: {
+        user_id: number;
+        role: tUserRole;
+        expires_ms: number;
+    } | null;
 }
 
 export interface iCustomResponse extends ServerResponse {

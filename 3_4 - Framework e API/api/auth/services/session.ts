@@ -1,6 +1,6 @@
-import { CoreProvider } from "../../../core/utils/abstract";
-import { AuthQuery } from "../querys";
-import { hashCode256, randomBytesAsync } from "../utils";
+import { CoreProvider } from "../../../core/utils/abstract.ts";
+import { AuthQuery } from "../querys.ts";
+import { hashCode256, randomBytesAsync } from "../utils.ts";
 
 interface iCreateSession {
     userId: number;
@@ -101,5 +101,20 @@ export class SessionService extends CoreProvider {
                 expires_ms: exp_ms,
             },
         };
+    }
+
+    invalidate(sid: string | undefined) {
+        const cookie = sidCookie("", 0);
+
+        try {
+            if (sid) {
+                const sid_hash = hashCode256(sid);
+                this.query.revokeSession("sid_hash", sid_hash);
+            }
+        } catch (_) {
+            console.error("Sessão não invalidada no banco");
+        }
+
+        return { cookie };
     }
 }

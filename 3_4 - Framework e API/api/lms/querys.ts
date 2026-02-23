@@ -1,4 +1,4 @@
-import { Query } from "../../core/utils/abstract";
+import { Query } from "../../core/utils/abstract.ts";
 import type { tCourse, tLesson } from "../@types/index.d.ts";
 
 type tNewCourse = Omit<tCourse, "id" | "created">;

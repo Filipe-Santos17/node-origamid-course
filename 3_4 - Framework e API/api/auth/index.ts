@@ -1,6 +1,7 @@
 import { Api } from "../../core/utils/abstract.ts";
 import NotAuthorizedError from "../../core/utils/errors/not-authorized-error.ts";
 import RouteError from "../../core/utils/route-error.ts";
+import { AuthMiddleware } from "./middlewares/auth.ts";
 import { AuthQuery } from "./querys.ts";
 import { SessionService } from "./services/session.ts";
 import { authTables } from "./tables.ts";
@@ -8,6 +9,7 @@ import { authTables } from "./tables.ts";
 export class AuthApi extends Api {
     query = new AuthQuery(this.db);
     session = new SessionService(this.core);
+    authMiddlweare = new AuthMiddleware(this.core);
 
     handlers = {
         login: async (req, res) => {
@@ -32,6 +34,19 @@ export class AuthApi extends Api {
             });
         },
 
+        logout: (req, res) => {
+            const sid = req.cookies["__Secure-sid"];
+
+            const { cookie } = this.session.invalidate(sid);
+
+            res.setCookie(cookie);
+
+            res.setHeader("Cache-Control", "private, no-store");
+            res.setHeader("Vary", "Cookie");
+
+            res.status(204).json({ msg: "Logout" });
+        },
+
         register: (req, res) => {
             const { name, username, email, password } = req.params;
 
@@ -53,26 +68,14 @@ export class AuthApi extends Api {
                 message: "Usuário criado com sucesso",
             });
         },
-
         getSession: (req, res) => {
-            const sid = req.cookies["__Secure-sid"];
+            const session = req.session;
 
-            if (!sid) {
-                throw new NotAuthorizedError("Não autorizado");
+            if (!session) {
+                throw new NotAuthorizedError();
             }
 
-            const { cookie, valid, session } = this.session.validate(sid);
-
-            res.setCookie(cookie);
-
-            if (!valid || !session) {
-                throw new NotAuthorizedError("Não autorizado");
-            }
-
-            res.setHeader("Cache-Control", "private, no-store");
-            res.setHeader("Vary", "Cookie");
-
-            res.status(200).json({ msg: "Autorizado" });
+            res.status(200).json(session);
         },
     } satisfies Api["handlers"];
 
@@ -82,6 +85,7 @@ export class AuthApi extends Api {
 
     routes(): void {
         this.router.post("/auth/login", this.handlers.login);
+        this.router.post("/auth/logout", this.handlers.logout);
         this.router.post("/auth/register", this.handlers.register);
         this.router.post("/auth/session", this.handlers.getSession);
     }

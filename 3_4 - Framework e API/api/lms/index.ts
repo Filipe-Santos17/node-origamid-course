@@ -5,9 +5,11 @@ import { LmsQuery } from "./querys.ts";
 
 import type { tCourse, tLesson } from "../@types/index.d.ts";
 import NotFoundError from "../../core/utils/errors/not-found-error.ts";
+import { AuthMiddleware } from "../auth/middlewares/auth.ts";
 
 export class LmsApi extends Api {
     query = new LmsQuery(this.db);
+    auth = new AuthMiddleware(this.core);
 
     handlers = {
         getCourses: (req, res) => {
@@ -31,7 +33,8 @@ export class LmsApi extends Api {
 
             const lesson = this.query.selectLessons(slug);
 
-            const userId = 1;
+            const userId = req.session?.user_id;
+
             let completed: {
                 lesson_id: number;
                 completed: string;
@@ -212,7 +215,7 @@ export class LmsApi extends Api {
     routes(): void {
         this.router.get("/lms/course", this.handlers.getCourses);
         this.router.post("/lms/course", this.handlers.postCourse);
-        this.router.get("/lms/course/:slug", this.handlers.getCourse);
+        this.router.get("/lms/course/:slug", this.handlers.getCourse, [this.auth.optional]);
         this.router.delete("/lms/course/reset", this.handlers.resetCompleteCourse);
         this.router.post("/lms/lesson", this.handlers.postLesson);
         this.router.post("/lms/lesson/:courseSlug/:lessonSlug", this.handlers.getLesson);

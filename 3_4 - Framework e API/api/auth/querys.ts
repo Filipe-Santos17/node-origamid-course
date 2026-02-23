@@ -1,11 +1,13 @@
-import { Query } from "../../core/utils/abstract";
+import { Query } from "../../core/utils/abstract.ts";
+
+export type tUserRole = "admin" | "editor" | "user";
 
 interface iUserData {
     id: number;
     name: string;
     username: string;
     email: string;
-    role: string;
+    role: tUserRole;
     password_hash: string;
     created: string;
     updated: string;
