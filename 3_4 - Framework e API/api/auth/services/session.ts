@@ -66,7 +66,7 @@ export class SessionService extends CoreProvider {
 
         //Altera o revoke para positivo no banco se o tempo do cookie tiver expirado
         if (now > exp_ms) {
-            this.query.revokeSession("sid_hash", sid_hash);
+            this.query.revokeSession(sid_hash);
         }
 
         //Atualiza o cookie automaticamente se faltar menos de 5 dias para expirar
@@ -82,7 +82,7 @@ export class SessionService extends CoreProvider {
         const user = this.query.selectUserRole(session.user_id);
 
         if (!user) {
-            this.query.revokeSession("sid_hash", sid_hash);
+            this.query.revokeSession(sid_hash);
 
             return {
                 valid: false,
@@ -109,12 +109,50 @@ export class SessionService extends CoreProvider {
         try {
             if (sid) {
                 const sid_hash = hashCode256(sid);
-                this.query.revokeSession("sid_hash", sid_hash);
+                this.query.revokeSession(sid_hash);
             }
         } catch (_) {
             console.error("Sessão não invalidada no banco");
         }
 
         return { cookie };
+    }
+
+    async reset_token({ userId, ua, ip }: iCreateSession) {
+        const token = (await randomBytesAsync(32)).toString("base64url");
+        const token_hash = hashCode256(token);
+
+        const expires_ms = Date.now() + 1000 * 60 * 30;
+
+        this.query.insertReset({
+            token: token_hash,
+            user_id: userId,
+            expires_ms,
+            ip,
+            ua,
+        });
+
+        return { token };
+    }
+
+    async validate_token(token: string) {
+        const now = Date.now();
+        const token_hash = hashCode256(token);
+
+        const reset = this.query.selectTokenReset(token_hash);
+
+        if (!reset) {
+            return null;
+        }
+
+        if (now > reset.expires_ms) {
+            return null;
+        }
+
+        this.query.revokeAllSessionByUserId(reset.user_id);
+
+        this.query.deleteReset(reset.user_id);
+
+        return { user_id: reset.user_id };
     }
 }

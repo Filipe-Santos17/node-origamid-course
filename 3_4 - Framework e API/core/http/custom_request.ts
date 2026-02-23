@@ -18,5 +18,9 @@ export default async function customRequest(request: IncomingMessage) {
 
     req.body = {};
 
+    req.baseUrl = "http://localhost:3000";
+
+    req.ua = req.headers["user-agent"] || "";
+
     return req;
 }

@@ -14,6 +14,8 @@ export interface iCustomRequest extends IncomingMessage {
         role: tUserRole;
         expires_ms: number;
     } | null;
+    baseUrl: string;
+    ua: string;
 }
 
 export interface iCustomResponse extends ServerResponse {
