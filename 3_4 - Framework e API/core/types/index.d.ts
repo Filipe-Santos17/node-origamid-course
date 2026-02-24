@@ -5,8 +5,8 @@ export interface iCustomRequest extends IncomingMessage {
     query: URLSearchParams;
     pathname: string;
     method: string;
-    body: Record<string, any>;
-    params: Record<string, any>;
+    body: Record<string, any>; //unknown
+    params: Record<string, string>;
     ip: string;
     cookies: Record<string, string | undefined>;
     session: {

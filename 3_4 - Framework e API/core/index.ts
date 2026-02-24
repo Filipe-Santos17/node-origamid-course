@@ -1,9 +1,4 @@
-import {
-    createServer,
-    type IncomingMessage,
-    type ServerResponse,
-    type Server,
-} from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import { customRequest, customResponse } from "./http/index.ts";
 import Router from "./routes.ts";
 import bodyJson from "./middleware/body-json.ts";
@@ -72,5 +67,11 @@ export class Core {
 
     init(port: number, msg: string) {
         this.server.listen(port || 8000, () => console.log(msg));
+
+        //eventos tratados automaticamente pelo nodejs e fornecidos pelo createServer
+        this.server.on("clientError", (error, socket) => {
+            console.log(`Client Error: ${error.message}`);
+            socket.destroy(); //Encerra conexão
+        });
     }
 }

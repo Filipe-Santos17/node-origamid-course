@@ -1,3 +1,4 @@
+import { rateLimit } from "../../core/middleware/rate-limit.ts";
 import { Api } from "../../core/utils/abstract.ts";
 import NotAuthorizedError from "../../core/utils/errors/not-authorized-error.ts";
 import NotFoundError from "../../core/utils/errors/not-found-error.ts";
@@ -193,7 +194,7 @@ export class AuthApi extends Api {
     }
 
     routes(): void {
-        this.router.post("/auth/login", this.handlers.login);
+        this.router.post("/auth/login", this.handlers.login, [rateLimit(30_000, 15)]);
         this.router.post("/auth/logout", this.handlers.logout);
         this.router.post("/auth/register", this.handlers.register);
         this.router.post("/auth/session", this.handlers.getSession, [this.authMiddlweare.guard("user")]);

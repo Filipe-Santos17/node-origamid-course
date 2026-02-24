@@ -6,6 +6,7 @@ import { LmsQuery } from "./querys.ts";
 import type { tCourse, tLesson } from "../@types/index.d.ts";
 import NotFoundError from "../../core/utils/errors/not-found-error.ts";
 import { AuthMiddleware } from "../auth/middlewares/auth.ts";
+import v from "../validate.ts";
 
 export class LmsApi extends Api {
     query = new LmsQuery(this.db);
@@ -48,7 +49,16 @@ export class LmsApi extends Api {
         },
 
         postCourse: (req, res) => {
-            const { slug, title, description, lessons, hours } = req.body as tCourse;
+            const body = req.body as tCourse;
+
+            //Validação pelo serviço
+            const { slug, title, description, lessons, hours } = {
+                slug: v.string(body.slug),
+                title: v.string(body.title),
+                description: v.string(body.description),
+                lessons: v.number(body.lessons),
+                hours: v.number(body.hours),
+            };
 
             const writeResult = this.query.insertCourse({
                 slug,
