@@ -108,6 +108,16 @@ export class LmsApi extends Api {
             res.json({ ...queryResult, prev, next, completed });
         },
 
+        getAllLessons: (req, res) => {
+            const allLessons = this.query.selectAllLessons();
+
+            if (allLessons.length) {
+                throw new RouteError(404, "Nenhuma lição cadastrada");
+            }
+
+            res.status(200).json(allLessons);
+        },
+
         postLesson: (req, res) => {
             const { courseSlug, slug, title, seconds, video, description, order, free } = req.body as tLesson & {
                 courseSlug: string;
@@ -176,13 +186,19 @@ export class LmsApi extends Api {
 
         resetCompleteCourse: (req, res) => {
             try {
-                const userId = 1;
+                const userId = req.session?.user_id as number;
                 const { courseId } = req.body;
 
                 const writeResult = this.query.deleteCompleteLessons(userId, courseId);
 
                 if (writeResult.changes === 0) {
                     throw new RouteError(400, "Erro ao resetar curso");
+                }
+
+                const writeResultCert = this.query.deleteCertificate(userId, courseId);
+
+                if (writeResultCert.changes === 0) {
+                    throw new RouteError(400, "Erro ao deletar certificado");
                 }
 
                 res.status(204).json({
@@ -226,9 +242,10 @@ export class LmsApi extends Api {
         this.router.get("/lms/course", this.handlers.getCourses);
         this.router.post("/lms/course", this.handlers.postCourse);
         this.router.get("/lms/course/:slug", this.handlers.getCourse, [this.auth.optional]);
-        this.router.delete("/lms/course/reset", this.handlers.resetCompleteCourse);
+        this.router.delete("/lms/course/reset", this.handlers.resetCompleteCourse, [this.auth.guard("user")]);
         this.router.post("/lms/lesson", this.handlers.postLesson);
         this.router.post("/lms/lesson/:courseSlug/:lessonSlug", this.handlers.getLesson);
+        this.router.post("/lms/lessons", this.handlers.getAllLessons);
         this.router.post("/lms/lesson/complete", this.handlers.postCompleteLesson);
         this.router.post("/lms/certificates", this.handlers.postCompleteLesson);
         this.router.post("/lms/certificates/:id", this.handlers.postCompleteLesson);

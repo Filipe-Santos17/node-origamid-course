@@ -14,13 +14,18 @@ type tCertificateFullData = {
 };
 
 export class LmsQuery extends Query {
+    //Nota: Cria um curso caso a slug seja nova, se não atualiza o curso
     insertCourse({ slug, title, description, lessons, hours }: tNewCourse) {
         const writeResult = this.db
             .query(
                 /*sql*/ `
                         INSERT OR IGNORE INTO "courses"
                         ("slug", "title", "description", "lessons", "hours")
-                        VALUES (?,?,?,?,?)
+                        VALUES (?,?,?,?,?) ON CONFLICT ("slug") DO UPDATE SET
+                        "title" = excluded."title",
+                        "description" = excluded."description",
+                        "lessons" = excluded."lessons",
+                        "hours" = excluded."hours",
                     `,
             )
             .run(slug, title, description, lessons, hours);
@@ -36,6 +41,13 @@ export class LmsQuery extends Query {
                         ("course_id", "slug", "title", "seconds", 
                         "video", "description", "order", "free")
                         VALUES ((SELECT "id" FROM "courses" WHERE "slug" = ?), ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT ("course_id", "slug") DO UPDATE SET
+                        "title" = excluded."title",
+                        "description" = excluded."description",
+                        "seconds" = excluded."seconds",
+                        "order" = excluded."order",
+                        "free" = excluded."free",
+                        "video" = excluded."video",
                     `,
             )
             .run(courseSlug, slug, title, seconds, video, description, order, free);
@@ -57,6 +69,17 @@ export class LmsQuery extends Query {
                 /*sql*/ `SELECT * FROM "lessons" WHERE "course_id" = (SELECT "id" FROM "courses" WHERE "slug" = ?) ORDER BY "order" ASC`,
             )
             .get(slug) as tLesson | undefined;
+    }
+
+    selectAllLessons() {
+        return this.db
+            .query(
+                /*sql*/
+                `SELECT "l".*, "c"."slug" as "course_slug" FROM "lessons" as "l" 
+                JOIN "courses" as "c" ON "c"."id" = "l"."course_id" 
+                ORDER BY "l"."course_id" ASC, "l"."order" ASC LIMIT 100`,
+            )
+            .all();
     }
 
     selectLesson(courseSlug: string, lessonSlug: string) {
@@ -91,6 +114,17 @@ export class LmsQuery extends Query {
             .query(
                 /*sql*/ `
                 DELETE FROM "lessons_completed" WHERE "user_id" = ? AND "course_id" = ?`,
+            )
+            .run(userId, courseId);
+
+        return writeResult;
+    }
+
+    deleteCertificate(userId: number, courseId: string) {
+        const writeResult = this.db
+            .query(
+                /*sql*/ `
+                DELETE FROM "certificates" WHERE "user_id" = ? AND "course_id" = ?`,
             )
             .run(userId, courseId);
 

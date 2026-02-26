@@ -1,0 +1,2 @@
+Links com # trocam o hash da url mas não recarrega o conteúdo, assim com o event listener hashchange no window pode se criar reações a mudança;
+location.hash = "" ; muda a rota sem recarregar
